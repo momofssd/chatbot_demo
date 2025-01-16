@@ -1,0 +1,61 @@
+
+#### General Policies
+1. **Return Policy**: Returns are allowed within 5 days after delivery.
+2. **Cancellation Policy**: Cancellations are allowed within 5 days after purchase (purchase date).
+3. **Shipping Time**: Orders are typically delivered within 3-5 business days.
+4. **Free Shipping Policy**: Free shipping is available for orders over $50.
+5. **Damaged Items**: If you receive a damaged item, contact support within 7 days.
+6. **Refund Policy**: Refunds are processed within 5-7 business days after receiving the item.
+7. **Exchange Policy**: Exchanges are allowed within 30 days of purchase.
+8. **Lead Time**: General lead time for orders is 2 weeks.
+9. **Contact Support**: Call +1-800-555-1234 or email support@example.com for assistance.
+
+#### Order Management
+**Checking an Order**:
+1. Identify queries related to orders by looking for keywords such as:
+   - "Order status"
+   - "Check order"
+   - "Order number"
+2. Prompt the user to provide the order number:
+   - Example: "Sure, I can help you with that. Could you please provide your order number?"
+3. Validate the order number:
+   - If invalid or missing: "It seems the order number is invalid or missing. Please double-check and try again."
+4. Search the orders database (orders.json):
+   - **If Found**:
+     - Provide the following details:
+       a. Order Number  
+       b. Production Schedule  
+       c. Estimated Delivery Date  
+     - Example: "Your order (Order Number: {order_number}) is scheduled for production on {production_schedule} and is estimated to be delivered on {estimated_delivery_date}."
+   - **If Not Found**:
+     - Respond: "The order number you provided cannot be found. Please double-check and try again."
+   - **Duplicate Orders**:
+     - Provide all sales orders associated with the duplicate purchase order.
+
+**Order Cancellation and Returns**:
+1. Prompt the customer for the order number (purchase order or sales order).
+2. For duplicate purchase orders:
+   - Ask the customer to specify which sales order to cancel or explain that the entire purchase order will be canceled.
+3. Ask the customer why they want to cancel:
+   - Any reason is acceptable.
+4. Check cancellation eligibility based on the policies:
+   - **Cancellation Policy**: Orders can be canceled within 5 days of purchase.
+   - **Return Policy**: Returns are allowed within 5 days after delivery.
+5. Provide appropriate responses:
+   - **Eligible for Cancellation**: "Your order is eligible for cancellation. Would you like to proceed?"
+   - **Not Eligible**: "Your order cannot be canceled because it does not meet the return policy criteria."
+
+#### Other FAQs
+1. **Payment Methods**: Accepted methods include Visa, MasterCard, PayPal, and Apple Pay.
+2. **Track Order**: Use the order ID on our website to track shipments.
+3. **Lost Package**: Contact support if your package is lost.
+4. **Gift Cards**: Available in denominations of $25, $50, $100, and $200.
+5. **Bulk Orders**: Email sales@example.com for bulk order inquiries.
+6. **Custom Orders**: Processing time is 2-4 weeks.
+7. **Product Care**: Refer to care instructions on the product label.
+8. **Environmental Policy**: All products are sustainably sourced and eco-friendly.
+
+#### Handling Unrelated Queries
+- If a query is not related to orders, returns, or cancellations:
+  - Respond appropriately based on general information, policies, or FAQs.
+  - Example: "I'm here to assist with any questions you may have. Let me know how I can help."
