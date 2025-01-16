@@ -11,6 +11,10 @@ from langchain.schema import Document
 import json
 import requests
 
+# Constants
+CHUNK_SIZE = 500
+CHUNK_OVERLAP = 0
+
 
 # Sidebar: API Key Input and Validation
 
@@ -18,7 +22,7 @@ st.sidebar.title("API Configuration")
 if "api_key" not in st.session_state:
     st.session_state.api_key = None
 
-api_key = st.sidebar.text_input("Enter your OpenAI API Key:", type="password", placeholder="sk-...")
+api_key = st.sidebar.text_input("Enter your OpenAI API Key:", type="password", placeholder="sk-...", help="Your OpenAI API key is required to access the chatbot functionality.")
 
 if api_key:
     try:
@@ -30,9 +34,10 @@ if api_key:
             st.sidebar.success("API key is valid!")
             st.session_state.api_key = api_key
         else:
-            st.sidebar.error(f"Invalid API key. Error: {response.json().get('error', {}).get('message', 'Unknown error')}")
-    except Exception as e:
-        st.sidebar.error(f"An error occurred: {str(e)}")
+            error_message = response.json().get('error', {}).get('message', 'Unknown error')
+            st.sidebar.error(f"Invalid API key. Error: {error_message}")
+    except requests.exceptions.RequestException as e:
+        st.sidebar.error(f"An error occurred while validating the API key: {str(e)}")
 else:
     st.sidebar.info("Please enter your OpenAI API key to proceed.")
 
@@ -44,7 +49,7 @@ if st.session_state.api_key:
     def load_vector_store(file_path):
         loader = TextLoader(file_path)
         documents = loader.load()
-        text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=0)
+        text_splitter = CharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
         return text_splitter.split_documents(documents)
 
 # Function to process orders.json dynamically
@@ -59,13 +64,15 @@ if st.session_state.api_key:
             )
             for entry in data
         ]
-        text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=0)
+        text_splitter = CharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
         return text_splitter.split_documents(documents)
 
     # Load documents and create vector store
     train_docs = load_vector_store("./train.txt")
     orders_docs = load_orders_vector_store("./orders.json")
-    all_docs = train_docs * 3 + orders_docs  # Weight train_docs 3 times more
+    # Weight train_docs 3 times more
+    all_docs = train_docs * 3 + orders_docs
+    # Initialize embeddings with the API key
     embeddings = OpenAIEmbeddings(openai_api_key=st.session_state.api_key)
     vectorstore = FAISS.from_documents(all_docs, embeddings)
     retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 5})
@@ -99,6 +106,7 @@ if st.session_state.api_key:
 
 
 
+    # Initialize the retrieval QA chain
     retrieval_qa_chain = RetrievalQA.from_chain_type(
         llm=ChatOpenAI(model="gpt-4o",openai_api_key=st.session_state.api_key),
         retriever=retriever,
@@ -114,21 +122,22 @@ if st.session_state.api_key:
             return f"An error occurred: {e}"
 
 
-    st.title("Chat Bot Demo")
-    st.subheader("With Prompt Engineering")
+    st.title("Chat Bot Demo with Prompt Engineering")
+    st.subheader("Interact with the chatbot using advanced prompt engineering techniques.")
 
 
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
 
-    user_message = st.text_input("Your Message:", key="chat_input")
+    user_message = st.text_input("Your Message:", key="chat_input", help="Type your message here and press Enter to receive a response from the chatbot.")
     if user_message:
         st.session_state.chat_history.append({"role": "user", "message": user_message})
         with st.spinner("Generating response..."):
             response = asyncio.run(get_response(user_message))
-            print("Updated Memory State:")
-            print(memory.chat_memory.messages)
+            # Debug: Print updated memory state
+            # print("Updated Memory State:")
+            # print(memory.chat_memory.messages)
         st.session_state.chat_history.append({"role": "bot", "message": response})
 
 
@@ -137,12 +146,12 @@ if st.session_state.api_key:
             """
             <style>
             .chat-container {
-                height: 500px; /* Set a fixed height for the chat area */
-                overflow-y: auto; /* Enable vertical scrolling */
+                height: 500px;
+                overflow-y: auto;
                 padding: 10px;
-                border: 1px solid #ccc; /* Optional: Add a border */
-                border-radius: 5px; /* Optional: Add rounded corners */
-                background-color: #f9f9f9; /* Optional: Light background color */
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                background-color: #f9f9f9;
             }
             .chat-container .user-message {
                 color: blue;
