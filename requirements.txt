@@ -2,3 +2,7 @@ streamlit==1.41.1
 langchain
 openai
 requests
+langchain_community
+langchain.chat_models
+langchain.memory
+langchain.chains
