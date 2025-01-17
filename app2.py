@@ -10,9 +10,20 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.schema import Document
 import json
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
+
+def parse_date(date_str):
+    """Convert date string to datetime object"""
+    try:
+        return datetime.strptime(date_str, "%Y-%m-%d")
+    except ValueError:
+        try:
+            return datetime.strptime(date_str, "%m/%d/%Y")
+        except ValueError:
+            return None
 
 today_date = datetime.now().strftime("%Y-%m-%d")
+today_datetime = parse_date(today_date)
 
 # Constants
 CHUNK_SIZE = 500
@@ -87,22 +98,46 @@ if st.session_state.api_key:
         st.session_state.memory.save_context(
             {"input": f"Today's date is {today_date}. You are a highly professional and empathetic customer service assistant."},
             {"output": (
-                "Your primary responsibility is to assist customers with their inquiries in a polite, concise, and helpful manner."
-                " Always prioritize resolving issues using the knowledge from the weighted training documents."
-                " Note: Confirmation status is not relevant to return or cancellation policies."
-                " Reference the retrieved information wherever applicable and explain it clearly to the customer."
-                " Ensure that responses are tailored to the customer's question, providing actionable steps or guidance."
-                " For inquiries related to orders, utilize the preloaded order data from `orders.json` to verify details or eligibility."
-                " When discussing returns or cancellations, strictly follow these policies:"
-                "  - **Return Policy**: Returns are allowed within 5 days after delivery."
-                "  - **Cancellation Policy**: Cancellations are allowed within 5 days after purchase (purchase date)."
-                 f" - check today's date {today_date}and use it validate return and cancelation deadline"
-                " If you cannot resolve a customer's issue directly, politely suggest they contact the appropriate department, such as order management, for further assistance."
-                " Acknowledge and validate the customer's concerns to make them feel heard."
-                " Structure your responses clearly, using bullet points or numbered steps for instructions when needed."
-                " End your responses with an offer to assist further or clarify any additional questions."
-                " Always maintain a professional tone and a focus on delivering exceptional customer service."
-               
+                "You are a highly professional customer service representative with extensive experience. Your role includes:"
+                "\n1. **General Information Provider**:"
+                "\n   - Provide accurate information about ALL company services and facilities"
+                "\n   - Share details about distribution centers, business hours, and policies"
+                "\n   - Answer questions about shipping, returns, and general inquiries"
+                "\n2. **Order Management Specialist**:"
+                "\n   - Handle order-related inquiries when specifically asked"
+                "\n   - Process returns and cancellations when requested"
+                "\n   - Track shipments and delivery status"
+                "\n3. **Professional Communication**:"
+                "\n   - Use clear, concise language"
+                "\n   - Stay focused on the customer's specific question"
+                "\n   - Provide complete answers without assuming related needs"
+                f"\n\nCRITICAL DATE AWARENESS - Today's date is: {today_date}"
+                "\nALWAYS use this date for ALL eligibility calculations:"
+                "\n- Returns: MUST check if within 5 days after delivery date"
+                "\n- Cancellations: MUST check if within 5 days after purchase date"
+                "\n- BEFORE providing ANY eligibility information:"
+                f"\n  1. Compare against today's date ({today_date})"
+                "\n  2. Calculate exact days difference"
+                "\n  3. Clearly state if eligible or not based on date comparison"
+                "\n- For delivered orders: Count days from delivery date to today"
+                "\n- For pending orders: Count days from purchase date to today"
+                "\n\nAdditional Policies:"
+                "\n- Shipping: 3-5 business days standard delivery"
+                "\n- Refunds: Processed within 5-7 business days"
+                "\n\nOrder Handling Requirements:"
+                "\n1. ALWAYS verify order details in orders.json"
+                "\n2. For EVERY order-related query:"
+                f"\n   - First state today's date: {today_date}"
+                "\n   - Then state relevant order dates (purchase/delivery)"
+                "\n   - Calculate and show days difference"
+                "\n   - Clearly explain eligibility based on date comparison"
+                "\n3. For duplicate orders, request specific order numbers"
+                "\n\nResponse Structure:"
+                "\n1. Acknowledge the customer's inquiry"
+                "\n2. Provide relevant information/solution"
+                "\n3. Add any necessary next steps or instructions"
+                "\n4. Close with a professional, helpful statement"
+                "\n\nMaintain consistent professionalism and focus on customer satisfaction throughout all interactions."
             )}
         )
 
@@ -122,13 +157,70 @@ if st.session_state.api_key:
 
     async def get_response(message):
         try:
-            return await retrieval_qa_chain.arun(message)
+            # Prepare context based on message content
+            if any(keyword in message.lower() for keyword in ['order', 'return', 'cancel', 'delivery']):
+                context = (
+                    f"IMPORTANT DATE INFORMATION:\n"
+                    f"- Today's date: {today_date}\n"
+                    f"- All eligibility checks MUST use {today_date} as the reference date\n"
+                    f"- When checking returns/cancellations:\n"
+                    f"  1. First state today's date ({today_date})\n"
+                    f"  2. Then state the relevant order dates\n"
+                    f"  3. Calculate and show the exact days difference\n"
+                    f"  4. Clearly explain if eligible based on the date difference\n\n"
+                )
+            else:
+                # Check if it's a distribution center query
+                if any(keyword in message.lower() for keyword in ['distribution', 'center', 'location', 'warehouse']):
+                    context = (
+                        "DISTRIBUTION CENTER INFORMATION GUIDELINES:\n"
+                        "1. Provide complete address and contact details\n"
+                        "2. Include business hours if available\n"
+                        "3. List any specific services or capabilities\n"
+                        "4. Do not discuss order processing unless specifically asked\n\n"
+                    )
+                else:
+                    context = (
+                        "RESPONSE GUIDELINES:\n"
+                        "1. Focus specifically on the customer's question\n"
+                        "2. Provide complete information from the knowledge base\n"
+                        "3. Do not redirect to order-related topics unless specifically asked\n"
+                        "4. Use clear, factual responses\n\n"
+                    )
+            
+            date_context = f"{context}User message: {message}"
+            response = await retrieval_qa_chain.arun(date_context)
+            
+            # Ensure date is mentioned in response if it's an order-related query
+            if any(keyword in message.lower() for keyword in ['order', 'return', 'cancel', 'delivery']):
+                if today_date not in response:
+                    response = f"As of today ({today_date}): \n\n{response}"
+            
+            return response
         except Exception as e:
             return f"An error occurred: {e}"
 
 
-    st.title("Chat Bot Demo with Prompt Engineering")
-    st.subheader("Interact with the chatbot using advanced prompt engineering techniques.")
+    st.title("Professional Customer Service Assistant")
+    st.subheader("How may I assist you today?")
+    
+    # Add helpful information
+    with st.expander("💡 Quick Help"):
+        st.markdown("""
+        I can help you with:
+        - Company Information & Facilities
+          • Distribution centers
+          • Business hours
+          • Contact information
+        - Order Management
+          • Order status
+          • Returns and cancellations
+          • Shipping information
+        - General Support
+          • Policies and procedures
+          • Services and programs
+          • Other inquiries
+        """)
 
 
     if "chat_history" not in st.session_state:
@@ -153,16 +245,34 @@ if st.session_state.api_key:
             .chat-container {
                 height: 500px;
                 overflow-y: auto;
-                padding: 10px;
-                border: 1px solid #ccc;
-                border-radius: 5px;
-                background-color: #f9f9f9;
+                padding: 15px;
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                background-color: #ffffff;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             }
             .chat-container .user-message {
-                color: blue;
+                background-color: #f0f4f8;
+                color: #2c3e50;
+                padding: 10px 15px;
+                border-radius: 15px;
+                margin: 10px 0;
+                max-width: 80%;
+                margin-left: auto;
+                word-wrap: break-word;
             }
             .chat-container .bot-message {
-                color: green;
+                background-color: #e8f4ff;
+                color: #34495e;
+                padding: 10px 15px;
+                border-radius: 15px;
+                margin: 10px 0;
+                max-width: 80%;
+                word-wrap: break-word;
+            }
+            .chat-container strong {
+                color: #1a73e8;
+                font-weight: 600;
             }
             </style>
             """,
