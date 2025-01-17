@@ -10,6 +10,9 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.schema import Document
 import json
 import requests
+from datetime import datetime
+
+today_date = datetime.now().strftime("%Y-%m-%d")
 
 # Constants
 CHUNK_SIZE = 500
@@ -82,7 +85,7 @@ if st.session_state.api_key:
     if "memory" not in st.session_state:
         st.session_state.memory = ConversationBufferMemory(return_messages=True)
         st.session_state.memory.save_context(
-            {"input": "You are a highly professional and empathetic customer service assistant."},
+            {"input": f"Today's date is {today_date}. You are a highly professional and empathetic customer service assistant."},
             {"output": (
                 "Your primary responsibility is to assist customers with their inquiries in a polite, concise, and helpful manner."
                 " Always prioritize resolving issues using the knowledge from the weighted training documents."
