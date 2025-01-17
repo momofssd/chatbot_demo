@@ -93,11 +93,13 @@ if st.session_state.api_key:
                 " When discussing returns or cancellations, strictly follow these policies:"
                 "  - **Return Policy**: Returns are allowed within 5 days after delivery."
                 "  - **Cancellation Policy**: Cancellations are allowed within 5 days after purchase (purchase date)."
+                 " - check today's date and use it validate return and cancelation deadline"
                 " If you cannot resolve a customer's issue directly, politely suggest they contact the appropriate department, such as order management, for further assistance."
                 " Acknowledge and validate the customer's concerns to make them feel heard."
                 " Structure your responses clearly, using bullet points or numbered steps for instructions when needed."
                 " End your responses with an offer to assist further or clarify any additional questions."
                 " Always maintain a professional tone and a focus on delivering exceptional customer service."
+               
             )}
         )
 
