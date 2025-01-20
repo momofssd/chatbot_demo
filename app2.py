@@ -89,7 +89,7 @@ if st.session_state.api_key:
     # Initialize embeddings with the API key
     embeddings = OpenAIEmbeddings(openai_api_key=st.session_state.api_key)
     vectorstore = FAISS.from_documents(all_docs, embeddings)
-    retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 5})
+    retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 7})
 
 
     # Initialize memory and store it in session_state
